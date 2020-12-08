@@ -62,7 +62,7 @@ These will be installed automatically in the master and worler nodes. If you wis
 
 ```bash
     kubectl create deploy nginx --image nginx
-    kubectl expose deploy nginx --port $PORT --targetPort=$TARGET_PORT
+    kubectl expose deploy nginx --port 80 --type NodePort
     kubectl get pods
 ```
 
