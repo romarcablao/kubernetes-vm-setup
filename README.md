@@ -18,12 +18,19 @@ You can modify the configuration (e.g. number of worker nodes, cpu count, memory
 ### III. Install v1.18 stable release: (kubeadm, kubelet, kubectl)
 These will be installed automatically in the master and worler nodes. If you wish to change/update the version, you can modify it directly in the script.
 
+1. Kubernetes-Docker Setup
 ```bash
     kubeadm v1.18.5-00 
     kubelet v1.18.5-00 
     kubectl v1.18.5-00
 ```
 
+1. Kubernetes-Containerd Setup
+```bash
+    kubeadm v1.20.0-00 
+    kubelet v1.20.0-00 
+    kubectl v1.20.0-00
+```
 ### IV. Setup
 
 1. Install [Vagrant](www.vagrantup.com) and [Virtualbox](virtualbox.org).

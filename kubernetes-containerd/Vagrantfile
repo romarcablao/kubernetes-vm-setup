@@ -1,0 +1,72 @@
+# Setup configuration/variables
+VAGRANT_BOX_IMAGE = "generic/ubuntu2004"
+MASTER_COUNT = 1
+WORKER_COUNT = 1
+POD_CIDR = "172.0.0.0/16"
+API_ADV_ADDRESS = "10.0.0.10"
+CLUSTER_NAME = "mycluster"
+BASE_ADDRESS = API_ADV_ADDRESS.rpartition(".")[0]
+
+Vagrant.configure("2") do |config|
+
+  config.vm.provision "file", source: "scripts/common.sh", destination: "/home/vagrant/common.sh"
+  config.vm.provision "shell" do |s|
+      s.inline = <<-SCRIPT
+        sed $'s/\r$//' /home/vagrant/common.sh > /home/vagrant/common-install.sh
+        chmod +x /home/vagrant/common-install.sh
+        /home/vagrant/common-install.sh 'KUBERNETES SETUP'
+        rm /home/vagrant/common.sh /home/vagrant/common-install.sh
+      SCRIPT
+  end
+
+  (0..MASTER_COUNT-1).each do |i|
+    config.vm.define "#{CLUSTER_NAME}-master-#{i}" do |subconfig|
+      subconfig.vm.box = VAGRANT_BOX_IMAGE
+      subconfig.vm.hostname = "#{CLUSTER_NAME}-master-#{i}"
+      subconfig.vm.network :private_network, ip: "#{BASE_ADDRESS}.#{i + 10}"
+      subconfig.vm.provider :virtualbox do |vb|
+        vb.customize ["modifyvm", :id, "--cpus", 3]
+        vb.memory = 3048
+      end
+
+      if i == 0
+        subconfig.vm.provision "file", source: "scripts/master.sh", destination: "/home/vagrant/master.sh"
+        subconfig.vm.provision "shell" do |s|
+          s.inline = <<-SCRIPT
+            sed $'s/\r$//' /home/vagrant/master.sh > /home/vagrant/master-install.sh
+            chmod +x /home/vagrant/master-install.sh
+            /home/vagrant/master-install.sh 'KUBERNETES SETUP' #{i} #{POD_CIDR} #{API_ADV_ADDRESS} #{BASE_ADDRESS} #{CLUSTER_NAME}
+            rm /home/vagrant/master.sh /home/vagrant/master-install.sh
+          SCRIPT
+        end
+      end
+    end
+  end
+  
+  (0..WORKER_COUNT-1).each do |i|
+    config.vm.define "#{CLUSTER_NAME}-worker-#{i}" do |subconfig|
+      subconfig.vm.box = VAGRANT_BOX_IMAGE
+      subconfig.vm.hostname = "#{CLUSTER_NAME}-worker-#{i}"
+      subconfig.vm.network :private_network, ip: "#{BASE_ADDRESS}.#{i + 20}"
+      subconfig.vm.provider :virtualbox do |vb|
+        vb.customize ["modifyvm", :id, "--cpus", 2]
+        vb.memory = 1024
+      end
+
+      subconfig.vm.provision "file", source: "scripts/worker.sh", destination: "/home/vagrant/worker.sh"
+      subconfig.vm.provision "shell" do |s|
+        s.inline = <<-SCRIPT
+          sed $'s/\r$//' /home/vagrant/worker.sh > /home/vagrant/worker-install.sh
+          chmod +x /home/vagrant/worker-install.sh
+          /home/vagrant/worker-install.sh 'KUBERNETES SETUP' #{i} #{POD_CIDR} #{API_ADV_ADDRESS} #{BASE_ADDRESS} #{CLUSTER_NAME}
+          rm /home/vagrant/worker.sh /home/vagrant/worker-install.sh
+        SCRIPT
+      end
+    end
+  end
+
+  config.vm.provision "shell",
+   run: "always",
+   inline: "swapoff -a"
+
+end
