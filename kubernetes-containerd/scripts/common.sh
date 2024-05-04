@@ -60,21 +60,3 @@ systemctl restart containerd
 systemctl enable containerd >/dev/null 2>&1
 
 apt-get install -y kubeadm=1.20.0-00 kubelet=1.20.0-00 kubectl=1.20.0-00
-
-# Setup Docker daemon
-cat > /etc/docker/daemon.json <<EOF
-{
-  "exec-opts": ["native.cgroupdriver=systemd"],
-  "log-driver": "json-file",
-  "log-opts": {
-    "max-size": "100m"
-  },
-  "storage-driver": "overlay2"
-}
-EOF
-
-mkdir -p /etc/systemd/system/docker.service.d
-
-# Restart docker
-systemctl daemon-reload
-systemctl restart docker
