@@ -1,6 +1,7 @@
 #!/usr/bin/env bash
 
 FLAG=$1
+KUBERNETES_VERSION="1.29.4-2.1"
 
 echo "------------------------------------------------------------------------------"
 echo " $FLAG"
@@ -9,10 +10,7 @@ echo " $FLAG"
 echo "------------------------------------------------------------------------------"
 
 ### Install packages to allow apt to use a repository over HTTPS
-apt-get update && apt-get install -y apt-transport-https ca-certificates curl gnupg-agent software-properties-common 
-
-### Add Kubernetes GPG key
-curl -s https://packages.cloud.google.com/apt/doc/apt-key.gpg | apt-key add -
+apt-get update && apt-get install -y gnupg2 apt-transport-https ca-certificates curl software-properties-common
 
 ### Kubernetes Repo
 curl -fsSL https://pkgs.k8s.io/core:/stable:/v1.29/deb/Release.key | sudo gpg --dearmor -o /etc/apt/keyrings/kubernetes-apt-keyring.gpg
@@ -32,7 +30,13 @@ net.bridge.bridge-nf-call-ip6tables = 1
 net.bridge.bridge-nf-call-iptables  = 1
 net.ipv4.ip_forward                 = 1
 EOF
-sysctl --system >/dev/null 2>&1
+
+# Disable swap
+swapoff -a
+sed -i '/ swap / s/^\(.*\)$/#\1/g' /etc/fstab
+
+# Apply sysctl params without reboot
+sudo sysctl --system
 
 echo "------------------------------------------------------------------------------"
 echo " $FLAG"
@@ -53,11 +57,13 @@ echo " $FLAG"
 echo " $FLAG ->> Installing Containerd and Kubernetes"
 echo " $FLAG"
 echo "------------------------------------------------------------------------------"
-apt-get update -qq >/dev/null 2>&1
-apt-get install -qq -y containerd apt-transport-https >/dev/null 2>&1
+apt-get install -y containerd
+apt-get install -y kubeadm="$KUBERNETES_VERSION" kubelet="$KUBERNETES_VERSION" kubectl="$KUBERNETES_VERSION"
+sudo apt-mark hold kubelet kubeadm kubectl
+
 mkdir /etc/containerd
 containerd config default > /etc/containerd/config.toml
-systemctl restart containerd
-systemctl enable containerd >/dev/null 2>&1
+sed -i 's/SystemdCgroup \= false/SystemdCgroup \= true/g' /etc/containerd/config.toml
 
-apt-get install -y kubeadm=1.29.4-2.1 kubelet=1.29.4-2.1 kubectl=1.29.4-2.1
+systemctl restart containerd 
+systemctl enable containerd

@@ -28,18 +28,19 @@ cp -i /etc/kubernetes/admin.conf /root/.kube/config
 
 echo "------------------------------------------------------------------------------"
 echo " $FLAG"
-echo " $FLAG ->> Configuring Kubernetes Cluster Calico Networking"
-echo " $FLAG ->> Downloading Calico YAML File"
+echo " $FLAG ->> Configuring Kubernetes Cluster Flannel Networking"
+echo " $FLAG ->> Downloading Flannel YAML File"
 echo " $FLAG"
 echo "------------------------------------------------------------------------------"
-wget -q https://docs.projectcalico.org/v3.14/manifests/calico.yaml -O /tmp/calico-default.yaml
-sed "s+192.168.0.0/16+$POD_CIDR+g" /tmp/calico-default.yaml > /tmp/calico-defined.yaml
+wget -q curl https://github.com/flannel-io/flannel/releases/latest/download/kube-flannel.yml -O /tmp/flannel-default.yaml
+sed "s+10.244.0.0/16+$POD_CIDR+g" /tmp/flannel-default.yaml > /tmp/flannel-defined.yaml
 
 echo "------------------------------------------------------------------------------"
 echo " $FLAG"
-echo " $FLAG ->> Applying Calico YAML File"
+echo " $FLAG ->> Applying Flannel YAML File"
 echo " $FLAG"
 echo "------------------------------------------------------------------------------"
-kubectl apply -f /tmp/calico-defined.yaml
-rm /tmp/calico-default.yaml /tmp/calico-defined.yaml
+sleep 60s
+kubectl apply -f /tmp/flannel-defined.yaml
+rm /tmp/flannel-default.yaml /tmp/flannel-defined.yaml 
 echo KUBELET_EXTRA_ARGS=--node-ip=$BASE_ADDRESS.1$NODE > /etc/default/kubelet
