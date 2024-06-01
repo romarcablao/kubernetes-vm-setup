@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 
 FLAG=$1
-KUBERNETES_VERSION="1.29.4-2.1"
+KUBERNETES_VERSION="1.29.4-*"
 
 echo "------------------------------------------------------------------------------"
 echo " $FLAG"
