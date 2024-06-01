@@ -33,9 +33,15 @@ These will be installed automatically in the master and worler nodes. If you wis
 ```
 3. [Containerd] Kubernetes-v1.29 Setup
 ```bash
-    kubeadm v1.29.4-2.1 
-    kubelet v1.29.4-2.1 
-    kubectl v1.29.4-2.1 
+    kubeadm v1.29.4
+    kubelet v1.29.4
+    kubectl v1.29.4
+```
+4. [Containerd] Kubernetes-v1.30 Setup
+```bash
+    kubeadm v1.30.1
+    kubelet v1.30.1
+    kubectl v1.30.1
 ```
 
 ### IV. Setup
